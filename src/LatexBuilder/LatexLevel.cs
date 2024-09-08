@@ -3,7 +3,7 @@
 /// <summary>
 /// LaTeX document level
 /// </summary>
-public enum DocumentLevel : ushort
+public enum LatexLevel : ushort
 {
     Chapter,
     Section,

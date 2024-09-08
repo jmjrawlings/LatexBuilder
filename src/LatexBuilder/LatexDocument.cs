@@ -6,11 +6,11 @@ using System.Text;
 /// Like a StringBuilder but for writing LaTeX reports
 /// </summary>
 /// <param name="level">The current section level</param>
-public sealed class LatexDocument(DocumentLevel level)
+public sealed class LatexDocument(LatexLevel level)
 {
     private readonly StringBuilder _sb = new();
     
-    public DocumentLevel Level { get; private set; } = level;
+    public LatexLevel Level { get; private set; } = level;
     
     public int Index => _sb.Length;
     
@@ -25,12 +25,12 @@ public sealed class LatexDocument(DocumentLevel level)
     {
         var cmd = Level++ switch
         {
-            DocumentLevel.Chapter => "chapter",
-            DocumentLevel.Section => "section",
-            DocumentLevel.Subsection => "subsection",
-            DocumentLevel.SubSubsection => "subsubsection",
-            DocumentLevel.Paragraph => "paragraph",
-            DocumentLevel.SubParagraph => "subparagraph",
+            LatexLevel.Chapter => "chapter",
+            LatexLevel.Section => "section",
+            LatexLevel.Subsection => "subsection",
+            LatexLevel.SubSubsection => "subsubsection",
+            LatexLevel.Paragraph => "paragraph",
+            LatexLevel.SubParagraph => "subparagraph",
             _ => "subparagraph",
         };
         Command(cmd, title);
@@ -56,13 +56,13 @@ public sealed class LatexDocument(DocumentLevel level)
     /// using (doc.Section("Introduction")
     ///     doc.WriteLn("Lorem Ipsum");
     /// </example>
-    public DocumentScope Section(string title)
+    public LatexScope Section(string title)
     {
         BeginSection(title);
-        return new DocumentScope(EndSection);
+        return new LatexScope(EndSection);
     }
     
-    public DocumentScope Landscape() => Env("landscape");
+    public LatexScope Landscape() => Env("landscape");
     
     /// <summary>
     /// Create a new table using the booktabs package
@@ -82,10 +82,10 @@ public sealed class LatexDocument(DocumentLevel level)
         Begin("tabular", $"{{{columns}}}");
     }
 
-    public DocumentScope Itemize()
+    public LatexScope Itemize()
     {
         Begin("itemize");
-        return new DocumentScope(() => End("itemize"));
+        return new LatexScope(() => End("itemize"));
     }
     
     public void Item(ReadOnlySpan<char> item)
@@ -107,7 +107,7 @@ public sealed class LatexDocument(DocumentLevel level)
     /// <summary>
     /// Create a new table using the booktabs package
     /// </summary>
-    public DocumentScope Table(
+    public LatexScope Table(
         string columns,
         string? layout = "h",
         string? caption = null,
@@ -116,7 +116,7 @@ public sealed class LatexDocument(DocumentLevel level)
     )
     {
         BeginTable(columns, layout, centered);
-        return new DocumentScope(() =>
+        return new LatexScope(() =>
         {
             EndTable(caption, label);
         });
@@ -148,16 +148,16 @@ public sealed class LatexDocument(DocumentLevel level)
 
     public void EndBrackets() => Command("right]");
     
-    public DocumentScope Parens()
+    public LatexScope Parens()
     {
         BeginParens();
-        return new DocumentScope(EndParens);
+        return new LatexScope(EndParens);
     } 
     
-    public DocumentScope Brackets()
+    public LatexScope Brackets()
     {
         BeginBrackets();
-        return new DocumentScope(EndBrackets);
+        return new LatexScope(EndBrackets);
     } 
     
     public void Write(ReadOnlySpan<char> chars) => _sb.Append(chars);
@@ -227,13 +227,13 @@ public sealed class LatexDocument(DocumentLevel level)
     /// <summary>
     /// Start a new environment scope
     /// </summary>
-    public DocumentScope Env(string cmd, string? args = null)
+    public LatexScope Env(string cmd, string? args = null)
     {
         Begin(cmd, args);
-        return new DocumentScope(() => End(cmd));
+        return new LatexScope(() => End(cmd));
     }
     
-    public DocumentScope Align() => Env("align*");
+    public LatexScope Align() => Env("align*");
     
     public void Write(char c) => _sb.Append(c);
     

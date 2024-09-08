@@ -7,7 +7,7 @@ public class UnitTests(ITestOutputHelper output)
     [Fact]
     public void TestWriteReadme()
     {
-        LatexDocument doc = DocumentBuilder
+        LatexDocument doc = LatexBuilder
             .Article()
             .WithTitle("LatexBuilder")
             .WithAuthor("Justin Rawlings")

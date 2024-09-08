@@ -4,7 +4,7 @@
 /// Builds a LaTeX document by correctly setting
 /// the documentclass as well as any other metadata
 /// </summary>
-public class DocumentBuilder
+public class LatexBuilder
 {
     public string? Title { get; set; }
 
@@ -12,9 +12,9 @@ public class DocumentBuilder
 
     public string? Date { get; set; }
     
-    public DocumentClass Class { get; private set; } = DocumentClass.Article;
+    public LatexClass Class { get; private set; } = LatexClass.Article;
     
-    public DocumentLevel Level { get; private set; }
+    public LatexLevel Level { get; private set; }
     
     public List<(string, string?)> Packages { get; private set; }
 
@@ -24,75 +24,75 @@ public class DocumentBuilder
 
     public bool TitlePage { get; set; }
     
-    public DocumentBuilder()
+    public LatexBuilder()
     {
         Packages = new List<(string, string?)>();
         Commands = new List<(string, int, string)>();
         Lengths = new List<(string, string)>();
     }
 
-    public DocumentBuilder WithClass(DocumentClass cls)
+    public LatexBuilder WithClass(LatexClass cls)
     {
         Class = cls;
         Level = cls switch
         {
-            DocumentClass.Book => DocumentLevel.Chapter,
-            _ => DocumentLevel.Section
+            LatexClass.Book => LatexLevel.Chapter,
+            _ => LatexLevel.Section
         };
         return this;
     }
 
-    public DocumentBuilder WithTitle(string? title)
+    public LatexBuilder WithTitle(string? title)
     {
         Title = title;
         return this;
     }
     
-    public DocumentBuilder WithDate(string date)
+    public LatexBuilder WithDate(string date)
     {
         Date = date;
         return this;
     }
     
-    public DocumentBuilder WithTodaysDate() => WithDate("\\today");
+    public LatexBuilder WithTodaysDate() => WithDate("\\today");
     
-    public DocumentBuilder WithDate(DateTime date)
+    public LatexBuilder WithDate(DateTime date)
     {
         string dt = date.ToLongDateString();
         Date = dt;
         return this;
     }
     
-    public DocumentBuilder WithTitlePage(bool? ok = true)
+    public LatexBuilder WithTitlePage(bool? ok = true)
     {
         TitlePage = ok ?? false;
         return this;
     }
 
-    public DocumentBuilder WithAuthor(string? author)
+    public LatexBuilder WithAuthor(string? author)
     {
         Author = author;
         return this;
     }
 
 
-    public DocumentBuilder WithLength(string name, string val)
+    public LatexBuilder WithLength(string name, string val)
     {
         Lengths.Add((name, val));
         return this;
     }
 
-    public static DocumentBuilder Default() =>
-        new DocumentBuilder();
+    public static LatexBuilder Default() =>
+        new LatexBuilder();
 
     public LatexDocument Build()
     {
         var doc = new LatexDocument(Level);
         var cls = Class switch
         {
-            DocumentClass.Article => "article",
-            DocumentClass.Book => "book",
-            DocumentClass.Report => "report",
+            LatexClass.Article => "article",
+            LatexClass.Book => "book",
+            LatexClass.Report => "report",
             _ => throw new ArgumentException(Class.ToString())
         };
         doc.Command("documentclass", cls);
@@ -125,21 +125,21 @@ public class DocumentBuilder
         return doc;
     }
 
-    public static DocumentBuilder Report() => Default().WithClass(global::LatexBuilder.DocumentClass.Report);
+    public static LatexBuilder Report() => Default().WithClass(global::LatexBuilder.LatexClass.Report);
 
-    public static DocumentBuilder Book() => Default().WithClass(global::LatexBuilder.DocumentClass.Book);
+    public static LatexBuilder Book() => Default().WithClass(global::LatexBuilder.LatexClass.Book);
 
-    public static DocumentBuilder Article() => Default().WithClass(global::LatexBuilder.DocumentClass.Article);
+    public static LatexBuilder Article() => Default().WithClass(global::LatexBuilder.LatexClass.Article);
 
     /// Use the given package eg: `siunitx`
-    public DocumentBuilder WithPackage(string package, string? extra = null)
+    public LatexBuilder WithPackage(string package, string? extra = null)
     {
         Packages.Add((package, extra));
         return this;
     }
 
     /// Use the given packages eg: `siunitx, mathsymb`
-    public DocumentBuilder WithPackages(params string[] packages)
+    public LatexBuilder WithPackages(params string[] packages)
     {
         foreach (var pkg in packages)
             WithPackage(pkg);
@@ -147,10 +147,10 @@ public class DocumentBuilder
     }
 
     /// Add a new alias (command with no args)
-    public DocumentBuilder WithAlias(string name, string body) => WithCommand(name, 0, body);
+    public LatexBuilder WithAlias(string name, string body) => WithCommand(name, 0, body);
 
     /// Add a new command to the report
-    public DocumentBuilder WithCommand(string name, int args, string body)
+    public LatexBuilder WithCommand(string name, int args, string body)
     {
         Commands.Add((name, args, body));
         return this;

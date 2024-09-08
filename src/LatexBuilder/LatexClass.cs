@@ -3,7 +3,7 @@
 /// <summary>
 /// LaTeX document class
 /// </summary>
-public enum DocumentClass : ushort
+public enum LatexClass : ushort
 {
     Report,
     Article,

@@ -5,7 +5,7 @@
 /// in our case this means closing open brackets, or
 /// dedenting.
 /// </summary>
-public readonly ref struct DocumentScope(Action onDispose) 
+public readonly ref struct LatexScope(Action onDispose) 
 {
     public void Dispose()
     {
