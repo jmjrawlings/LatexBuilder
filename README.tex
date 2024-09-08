@@ -1,0 +1,67 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage{amsmath}
+
+\title{LatexBuilder}
+\author{Justin Rawlings}
+\date{Sunday, 8 September 2024}
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This is an introduction.
+\section{Sections}
+Document levels are maintained internally by the \emph{LatexDocument}.
+So there is no need to remember which section/subsection/paragraph level
+you are at.
+
+Document scopes are implemented using readonly ref structs so they should
+quite performant to use which can be a concern when writing large documents.
+
+\subsection{A subsection}
+This is now a subsection as we were already inside a Section.
+\subsection{Another subsection}
+\subsubsection{A subsubsection}
+\paragraph{A paragraph}
+\subparagraph{A subparagraph}
+\subparagraph{Nesting maxes out at subparagraph}
+That wasnt so bad.
+\section{Some math}
+The string interpolation features in newer versions of C\# is
+very well suited to mixing code variables and latex markup.
+
+We seek to calculate the value for $\gamma$:
+\begin{align*}
+    \gamma & = \alpha + \beta \tag{a tag} \\
+    \alpha & = 1                          \\
+    \beta  & = 2                          \\
+    \gamma & = 1 + 2                      \\
+           & = 3
+\end{align*}
+\section{Other things}
+\subsection{Lists}
+\begin{itemize}
+    \item First item\begin{itemize}
+              \item Nested item 1\item Nested item 2
+          \end{itemize}
+    \item Second item
+\end{itemize}
+\subsection{Tables}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{r|r|r}
+        \toprule
+        n & variable & value \\
+        \midrule
+        1 & $\alpha$ & $1$   \\
+        2 & $\beta$  & $2$   \\
+        3 & $\gamma$ & $3$   \\
+        \bottomrule
+    \end{tabular}
+    \caption*{A table caption}
+    \label{table}
+\end{table}
+\subsection{Manual section}
+You can also manage sections explicitly using \emph{BeginSection} and \emph{EndSection}
+
+\end{document}
