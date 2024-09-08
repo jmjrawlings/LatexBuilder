@@ -1,13 +1,16 @@
 ﻿# LatexBuilder
 
-Like a StringBuilder but for LaTeX documents.
+Helper classes for building [LaTeX](https://www.latex-project.org/) documents.
+
+The API is somewhat inspired by StringBuilder as it's really just a thin wrapper of it.
+
 
 ## Quickstart
 
 ```csharp
 using LatexBuilder;
 
-var doc = LatexBuilder
+LatexDocument doc = LatexBuilder
     .Article()
     .WithTitle("A new document")
     .WithAuthor("Justin Rawlings")
@@ -19,17 +22,20 @@ using (doc.Section("Introduction"))
 
 using (doc.Section("A Section")){
     doc.WriteLn("Section levels are maintained interally");
+    
     using (doc.Section("A subsection"))
         doc.WriteLn("This is in a subsection");
+    
     using (doc.Section("Another subsection")){
-    using (doc.Environment("align*"))
-        doc.WriteLn($$"""
-            \alpha &= 1 \\
-            \beta &= 2 \\
-            \intertext{thus}
-            \alpha + \beta &= 3
-        """);
+        using (doc.Environment("align*"))
+            doc.WriteLn($$"""
+                \alpha &= 1 \\
+                \beta &= 2 \\
+                \intertext{thus}
+                \alpha + \beta &= 3
+            """);
     }
+    
     doc.BeginSection("Manul section");
     doc.WriteLn("You can also begin and end sections explicity");
     doc.EndSection();    

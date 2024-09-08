@@ -1,134 +1,131 @@
 ﻿namespace LatexBuilder;
 
-using System.Diagnostics;
 using System.Text;
 
 /// <summary>
 /// Like a StringBuilder but for writing LaTeX reports
 /// </summary>
-public sealed class LatexDocument
+/// <param name="level">The current section level</param>
+public sealed class LatexDocument(DocumentLevel level)
 {
-    // Underlying report
-    private readonly StringBuilder _sb;
-
-    // Current section level
-    public int Level { get; private set; }
-
-    // All open scopes
-    private Stack<Scope>? _scopes;
-
-    public int Index { get; private set; }
-
+    private readonly StringBuilder _sb = new();
+    
+    public DocumentLevel Level { get; private set; } = level;
+    
+    public int Index => _sb.Length;
+    
     /// <summary>
-    /// Create a new ReportBuilder with the given title
+    /// Begin a new section at the next document level.
+    /// The section must be ended by a call to <see cref="EndSection"/>.
+    /// Alternatively you can use <see cref="Section"/> for a disposable
+    /// that will do this for you.
     /// </summary>
-    public LatexDocument(int level)
-    {
-        Level = level;
-        Index = 0;
-        _sb = new StringBuilder();
-        _scopes = new Stack<Scope>();
-    }
-
-    public void Space()
-    {
-        _sb.Append(' ');
-    }
-
-    public void Insert(int index, ReadOnlySpan<char> value)
-    {
-        _sb.Insert(index, value);
-    }
-
-    public int Bookmark() => Index = _sb.Length;
-
+    /// <param name="title">Title of the section</param>
     public void BeginSection(string title)
     {
-        var (cmd, pad) = Level++ switch
+        var cmd = Level++ switch
         {
-            0 => ("chapter", false),
-            1 => ("section", false),
-            2 => ("subsection", false),
-            3 => ("subsubsection", false),
-            4 => ("paragraph", true),
-            _ => ("subparagraph", true)
+            DocumentLevel.Chapter => "chapter",
+            DocumentLevel.Section => "section",
+            DocumentLevel.Subsection => "subsection",
+            DocumentLevel.SubSubsection => "subsubsection",
+            DocumentLevel.Paragraph => "paragraph",
+            DocumentLevel.SubParagraph => "subparagraph",
+            _ => "subparagraph",
         };
-
-        if (!pad)
-        {
-            WriteLn($@"\{cmd}{{{title}}}");
-        }
-        else
-        {
-            WriteLn($@"\{cmd}{{{title}}} \hfill");
-            NewLine();
-        }
+        Command(cmd, title);
     }
 
+    public void NewPage() => Command("newpage");
+    
+    public void ClearPage() => Command("clearpage");
+    
+    /// <summary>
+    /// End the current section by decrementing the document level
+    /// </summary>
     public void EndSection()
     {
         Level--;
-        NewLine();
     }
-
-    public IDisposable Section(string title)
+    
+    /// <summary>
+    /// Return a disposable scope for a section with
+    /// the given title.
+    /// </summary>
+    /// <example>
+    /// using (doc.Section("Introduction")
+    ///     doc.WriteLn("Lorem Ipsum");
+    /// </example>
+    public DocumentScope Section(string title)
     {
         BeginSection(title);
-        return new Scope(EndSection);
+        return new DocumentScope(EndSection);
     }
-
-    public void Command2(string cmd, string arg1, string arg2) =>
-        Command(cmd, arg: arg1, arg2: arg2);
-
-    public void Command(string cmd, string? arg = null, string? opt = null, string? arg2 = null)
+    
+    public DocumentScope Landscape() => Env("landscape");
+    
+    /// <summary>
+    /// Create a new table using the booktabs package
+    /// </summary>
+    public void BeginTable(
+        string columns,
+        string? layout = "h",
+        bool centered = true
+    )
     {
-        Write('\\');
-        Write(cmd);
-        if (arg is not null)
-        {
-            Write('{');
-            Write(arg);
-            Write('}');
-            if (opt is not null)
-            {
-                Write('[');
-                Write(opt);
-                Write(']');
-            }
-
-            if (arg2 is not null)
-            {
-                Write('{');
-                Write(arg2);
-                Write('}');
-            }
-        }
-        NewLine();
+        if (layout is null)
+            Begin("table");
+        else
+            Begin("table", $"[{layout}]");
+        if (centered)
+            Command("centering");
+        Begin("tabular", $"{{{columns}}}");
     }
 
-    public IDisposable Landscape() => Environment("landscape");
-
-    public IDisposable Table(
-        string format,
-        string layout = "H",
+    public DocumentScope Itemize()
+    {
+        Begin("itemize");
+        return new DocumentScope(() => End("itemize"));
+    }
+    
+    public void Item(ReadOnlySpan<char> item)
+    {
+        _sb.Append("\\item ");
+        _sb.Append(item);
+    }
+    
+    public void EndTable(string? caption = null, string? label = null) 
+    {
+        End("tabular");
+        if (caption is not null)
+            Command("caption*", caption);
+        if (label is not null)
+            Label(label);
+        End("table");
+    }
+    
+    /// <summary>
+    /// Create a new table using the booktabs package
+    /// </summary>
+    public DocumentScope Table(
+        string columns,
+        string? layout = "h",
         string? caption = null,
         string? label = null,
         bool centered = true
     )
     {
-        Begin("table", $"[{layout}]");
-        if (centered)
-            Command("centering");
-        Begin("tabular", $"{{{format}}}");
-        return PushScope(() =>
+        BeginTable(columns, layout, centered);
+        return new DocumentScope(() =>
         {
-            End("tabular");
-            if (caption is not null)
-                Command("caption*", caption);
-            if (label is not null)
-                Label(label);
-            End("table");
+            EndTable(caption, label);
         });
+    }
+    
+    public void WriteRow(params string[] values)
+    {
+        _sb.AppendJoin(" & ", values);
+        _sb.AppendLine(@"\\");
     }
     
     public void RowColour(string colour) => Command("rowcolor", colour);
@@ -143,34 +140,42 @@ public sealed class LatexDocument
 
     public void BottomRule() => Command("bottomrule");
 
-    public void BeginBrackets() => Command("left(");
+    public void BeginParens() => Command("left(");
 
-    public void EndBrackets() => Command("right)");
+    public void EndParens() => Command("right)");
+    
+    public void BeginBrackets() => Command("left[");
 
-    /// Write a math block
-    public void WriteMath(string latex)
+    public void EndBrackets() => Command("right]");
+    
+    public DocumentScope Parens()
     {
-        Begin("align*");
-        WriteLn(latex);
-        End("align*");
-    }
-
-    public void Write(string? s)
+        BeginParens();
+        return new DocumentScope(EndParens);
+    } 
+    
+    public DocumentScope Brackets()
     {
-        _sb.Append(s);
-    }
+        BeginBrackets();
+        return new DocumentScope(EndBrackets);
+    } 
+    
+    public void Write(ReadOnlySpan<char> chars) => _sb.Append(chars);
+    
+    public void Write(string? s) => _sb.Append(s);
 
-    public void WriteLn(string? s)
+    public void WriteLn(string? s) => _sb.AppendLine(s);
+    
+    /// <summary>
+    /// Write a paragraph
+    /// </summary>
+    public void Para(ReadOnlySpan<char> text)
     {
-        _sb.AppendLine(s);
+        _sb.Append(text);
+        _sb.Append('\n');
+        _sb.Append('\n');
     }
-
-    public void WriteRow(params string[] values)
-    {
-        _sb.AppendJoin(" & ", values);
-        _sb.AppendLine(@"\\");
-    }
-
+    
     public void WriteLn(char c)
     {
         _sb.Append(c);
@@ -218,77 +223,75 @@ public sealed class LatexDocument
             _sb.Append('\n');
         Command("end", cmd);
     }
-
-    public IDisposable Environment(string cmd, string? args = null)
+    
+    /// <summary>
+    /// Start a new environment scope
+    /// </summary>
+    public DocumentScope Env(string cmd, string? args = null)
     {
         Begin(cmd, args);
-        return PushScope(() => End(cmd));
-    }
-
-    public void Write(char c)
-    {
-        _sb.Append(c);
-    }
-
-    public void Write(char c, int count)
-    {
-        _sb.Append(c, count);
-    }
-
-    public void NewLine()
-    {
-        _sb.AppendLine();
-    }
-
-    /// <summary>
-    /// Create a new scope with the given disposable action
-    /// </summary>
-    internal IDisposable PushScope(Action action)
-    {
-        var scope = new Scope(action);
-        _scopes ??= new Stack<Scope>();
-        _scopes.Push(scope);
-        return scope;
+        return new DocumentScope(() => End(cmd));
     }
     
-    public string Text()
+    public DocumentScope Align() => Env("align*");
+    
+    public void Write(char c) => _sb.Append(c);
+    
+    public void Write(char c, int count) => _sb.Append(c, count);
+    
+    public void NewLine() => _sb.AppendLine();
+    
+    /// Insert a string at an index 
+    public void Insert(int index, ReadOnlySpan<char> value)
     {
-        // Close out all remaining scopes
-        while (_scopes is { Count: > 0 })
-        {
-            var scope = _scopes.Pop();
-            if (!scope.Disposed)
-                scope.Dispose();
-        }
-        var text = _sb.ToString();
-        return text;
+        _sb.Insert(index, value);
     }
 
-    public string WriteToFile(string path)
+    public FileInfo WriteToFile(string path)
     {
-        var text = Text();
+        var text = ToString();
         File.WriteAllText(path, text);
-        return text;
+        return new FileInfo(path);
     }
+    
+    public FileInfo WriteToFile(FileInfo file) => WriteToFile(file.FullName);
+    
+    public void Command2(string cmd, string arg1, string arg2) =>
+        Command(cmd, arg: arg1, arg2: arg2);
 
-    public string WriteToFile(FileInfo file) => WriteToFile(file.FullName);
-
-
-    /// <summary>
-    /// A disposable that performs a side effect when disposed.
-    /// in our case this means closing open brackets, or
-    /// dedenting.
-    /// </summary>
-    private sealed class Scope(Action onDispose) : IDisposable
+    public void Command(string cmd, string? arg = null, string? opt = null, string? arg2 = null)
     {
-        public bool Disposed { get; private set; }
-
-        public void Dispose()
+        Write('\\');
+        Write(cmd);
+        if (arg is not null)
         {
-            onDispose();
-            Disposed = true;
-        }
-    }
+            Write('{');
+            Write(arg);
+            Write('}');
+            if (opt is not null)
+            {
+                Write('[');
+                Write(opt);
+                Write(']');
+            }
 
-    public override string ToString() => $"LatexDocument";
+            if (arg2 is not null)
+            {
+                Write('{');
+                Write(arg2);
+                Write('}');
+            }
+        }
+        NewLine();
+    }
+    
+    public override string ToString()
+    {
+        string s = _sb.ToString();
+        string tex = $$"""
+            {{s}}
+            \end{document}
+            """;
+        return tex;
+    }
 }

@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9DFA8D83-EEB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LatexBuilder", "src\LatexBuilder\LatexBuilder.csproj", "{B9D64CF9-523B-4EB8-9476-12CE01DECB3F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F215604B-7147-4C03-9184-83038682A678}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LatexBuilder.Tests", "test\LatexBuilder.Tests\LatexBuilder.Tests.csproj", "{F420FC8D-39B0-4D45-95F2-36A5D4F777CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +24,13 @@ Global
 		{B9D64CF9-523B-4EB8-9476-12CE01DECB3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9D64CF9-523B-4EB8-9476-12CE01DECB3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9D64CF9-523B-4EB8-9476-12CE01DECB3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F420FC8D-39B0-4D45-95F2-36A5D4F777CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F420FC8D-39B0-4D45-95F2-36A5D4F777CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F420FC8D-39B0-4D45-95F2-36A5D4F777CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F420FC8D-39B0-4D45-95F2-36A5D4F777CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B9D64CF9-523B-4EB8-9476-12CE01DECB3F} = {9DFA8D83-EEBC-4BFB-BD61-E524F2FA3DDE}
+		{F420FC8D-39B0-4D45-95F2-36A5D4F777CC} = {F215604B-7147-4C03-9184-83038682A678}
 	EndGlobalSection
 EndGlobal
